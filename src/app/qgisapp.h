@@ -79,7 +79,6 @@ class QgsPluginLayer;
 class QgsPointCloudLayer;
 class QgsPointXY;
 class QgsPrintLayout;
-class QgsProcessingToolboxDockWidget;
 class QgsProviderRegistry;
 class QgsProviderSublayerDetails;
 class QgsPythonUtils;
@@ -740,6 +739,7 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     QAction *actionCheckQgisVersion() { return mActionCheckQgisVersion; }
     QAction *actionAbout() { return mActionAbout; }
     QAction *actionSponsors() { return mActionSponsors; }
+    QAction *actionShowProcessingToolbox() { return mActionShowProcessingToolbox; }
     QAction *actionEditFeaturesInPlace() { return mActionEditFeaturesInPlace; }
     QAction *actionProcessingHistory() { return mProcessingHistoryAction; }
 
@@ -1793,8 +1793,6 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     //! Import layers in dwg format
     void dwgImport();
 
-    QToolBar *processingToolboxToolBar();
-
     /**
      * Open the project file corresponding to the
      * text)= of the given action.
@@ -2776,7 +2774,6 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     QgsAdvancedDigitizingDockWidget *mAdvancedDigitizingDockWidget = nullptr;
     QgsStatisticalSummaryDockWidget *mStatisticalSummaryDockWidget = nullptr;
     QgsBookmarks *mBookMarksDockWidget = nullptr;
-    QgsProcessingToolboxDockWidget *mProcessingToolboxDockWidget = nullptr;
 
     //! Data Source Manager
     QgsDataSourceManagerDialog *mDataSourceManagerDialog = nullptr;

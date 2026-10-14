@@ -18,11 +18,19 @@
 
 #include "ui_qgsprocessingtoolboxdockwidgetbase.h"
 
+#include "qgis.h"
+#include "qgis_gui.h"
 #include "qgsdockwidget.h"
 
 class QgsProcessingProvider;
 
-class QgsProcessingToolboxDockWidget : public QgsDockWidget, private Ui::QgsProcessingToolboxDockWidgetBase
+/**
+ * Processing toolbox dock widget, providing access to available processing algorithms.
+ * \ingroup gui
+ * \warning Not part of stable API and may change in future QGIS releases.
+ * \since QGIS 4.4
+ */
+class GUI_EXPORT QgsProcessingToolboxDockWidget : public QgsDockWidget, private Ui::QgsProcessingToolboxDockWidgetBase
 {
     Q_OBJECT
   public:

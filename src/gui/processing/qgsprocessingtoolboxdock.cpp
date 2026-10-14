@@ -16,7 +16,6 @@
 #include "qgsprocessingtoolboxdock.h"
 
 #include "qgis.h"
-#include "qgisapp.h"
 #include "qgsapplication.h"
 #include "qgsgui.h"
 #include "qgsprocessingguiregistry.h"
@@ -63,25 +62,17 @@ QgsProcessingToolboxDockWidget::QgsProcessingToolboxDockWidget( QWidget *parent 
   connect( QgsApplication::processingRegistry(), &QgsProcessingRegistry::providerAdded, this, &QgsProcessingToolboxDockWidget::providerAdded );
   connect( QgsApplication::processingRegistry(), &QgsProcessingRegistry::providerRemoved, this, &QgsProcessingToolboxDockWidget::providerRemoved );
 
-  connect( QgisApp::instance(), &QgisApp::activeLayerChanged, this, &QgsProcessingToolboxDockWidget::activeLayerChanged );
-
-  connect( QgisApp::instance()->actionEditFeaturesInPlace(), &QAction::toggled, this, &QgsProcessingToolboxDockWidget::setInPlaceEditMode );
-
-  connect( QgisApp::instance(), &QgisApp::activeLayerChanged, this, &QgsProcessingToolboxDockWidget::syncInPlaceEditState );
 
   syncInPlaceEditState();
 }
 
 void QgsProcessingToolboxDockWidget::initializeActions()
 {
-  mProcessingToolbar->addAction( QgisApp::instance()->actionProcessingHistory() );
-  mProcessingToolbar->addSeparator();
-  mProcessingToolbar->addAction( QgisApp::instance()->actionEditFeaturesInPlace() );
-  mProcessingToolbar->addSeparator();
   auto optionsAction = new QAction( QgsApplication::getThemeIcon( u"/mActionOptions.svg"_s ), tr( "Options" ), this );
   optionsAction->setObjectName( "optionsAction" );
   connect( optionsAction, &QAction::triggered, this, [this] {
-    QgisApp::instance()->showOptionsDialog( QgisApp::instance(), u"processingOptions"_s );
+    // QgsAppProcessingUtils::instance()->openOptions();
+    // QgisApp::instance()->showOptionsDialog( QgisApp::instance(), u"processingOptions"_s );
     mTxtTip->setVisible( hasDisabledProviders() );
   } );
   mProcessingToolbar->addAction( optionsAction );
@@ -115,21 +106,21 @@ QToolBar *QgsProcessingToolboxDockWidget::toolBar()
 
 void QgsProcessingToolboxDockWidget::syncInPlaceEditState( QgsMapLayer *layer )
 {
-  if ( !layer )
-  {
-    layer = QgisApp::instance()->activeLayer();
-  }
+  // if ( !layer )
+  // {
+  //   layer = QgisApp::instance()->activeLayer();
+  // }
 
-  QAction *editInPlaceAction = QgisApp::instance()->actionEditFeaturesInPlace();
-  const bool oldEnabledState = editInPlaceAction->isEnabled();
+  // QAction *editInPlaceAction = QgisApp::instance()->actionEditFeaturesInPlace();
+  // const bool oldEnabledState = editInPlaceAction->isEnabled();
 
-  const bool newEnabledState = qobject_cast< QgsVectorLayer * >( layer );
-  editInPlaceAction->setEnabled( newEnabledState );
+  // const bool newEnabledState = qobject_cast< QgsVectorLayer * >( layer );
+  // editInPlaceAction->setEnabled( newEnabledState );
 
-  if ( newEnabledState != oldEnabledState )
-  {
-    setInPlaceEditMode( newEnabledState && editInPlaceAction->isChecked() );
-  }
+  // if ( newEnabledState != oldEnabledState )
+  // {
+  //   setInPlaceEditMode( newEnabledState && editInPlaceAction->isChecked() );
+  // }
 }
 
 void QgsProcessingToolboxDockWidget::setFilterString( const QString &string )
@@ -224,7 +215,7 @@ void QgsProcessingToolboxDockWidget::openSettings( const QString &url )
   }
   else
   {
-    QgisApp::instance()->showOptionsDialog( QgisApp::instance(), u"processingOptions"_s );
+    // QgisApp::instance()->showOptionsDialog( QgisApp::instance(), u"processingOptions"_s );
     mTxtTip->setVisible( hasDisabledProviders() );
   }
 }
@@ -252,6 +243,7 @@ void QgsProcessingToolboxDockWidget::activeLayerChanged( QgsMapLayer *layer )
     return;
 
   mAlgorithmTree->setInPlaceLayer( vl );
+  syncInPlaceEditState( vl );
 }
 
 bool QgsProcessingToolboxDockWidget::hasDisabledProviders()

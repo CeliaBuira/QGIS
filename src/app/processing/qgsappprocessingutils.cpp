@@ -34,7 +34,6 @@
 #include "qgsprocessingprovideractions.h"
 #include "qgsprocessingregistry.h"
 #include "qgsprocessingscripteditordialog.h"
-#include "qgsprocessingtoolboxdock.h"
 
 #include <QString>
 
@@ -593,6 +592,11 @@ void QgsAppProcessingUtils::openHistory()
   dlg->setAttribute( Qt::WidgetAttribute::WA_DeleteOnClose );
   dlg->show();
 }
+
+// void QgsAppProcessingUtils::openOptions()
+// {
+//   QgisApp::instance()->showOptionsDialog( QgisApp::instance(), u"processingOptions"_s );
+// }
 
 void QgsAppProcessingUtils::initProjectModelProvider()
 {

@@ -45,6 +45,7 @@ from qgis.gui import (
     QgsProcessingAlgorithmWidgetBase,
     QgsProcessingDialogFactory,
     QgsProcessingHistoryDialog,
+    QgsProcessingToolboxDockWidget,
 )
 from qgis.PyQt import sip
 from qgis.PyQt.QtCore import (
@@ -277,6 +278,42 @@ class ProcessingPlugin(QObject):
             self.create_test
         )
 
+        self.toolboxDock = QgsProcessingToolboxDockWidget(self.iface.mainWindow())
+        self.toolboxDock.setObjectName("ProcessingToolboxDockWidget")
+        self.toolboxDock.setToggleVisibilityAction(iface.actionShowProcessingToolbox())
+
+        self._gui_connections.append(
+            self.iface.currentLayerChanged.connect(
+                self.toolboxDock.activeLayerChanged
+            )
+        )
+
+        self._gui_connections.append(
+            self.iface.actionEditFeaturesInPlace().toggled.connect(
+                self.toolboxDock.setInPlaceEditMode
+            )
+        )
+
+        self.toolboxDock.toolBar().addAction(iface.actionProcessingHistory())
+        self.toolboxDock.toolBar().addSeparator()
+        self.toolboxDock.toolBar().addAction(iface.actionEditFeaturesInPlace())
+        self.toolboxDock.toolBar().addSeparator()
+
+        self.optionsAction = QAction(
+            QgsApplication.getThemeIcon("/mActionOptions.svg"),
+            self.tr("Options"),
+            self.iface.mainWindow(),
+        )
+        self.optionsAction.setObjectName("optionsAction")
+        self.optionsAction.triggered.connect(self.openProcessingOptions)
+        self.toolboxDock.toolBar().addAction(self.optionsAction)
+
+        self.toolboxDock.initializeActions()
+        self.iface.addDockWidget(
+            Qt.DockWidgetArea.RightDockWidgetArea, self.toolboxDock
+        )
+        self.toolboxDock.hide()
+
         self.resultsDock = ResultsDock()
         self.iface.addDockWidget(
             Qt.DockWidgetArea.RightDockWidgetArea, self.resultsDock
@@ -299,7 +336,7 @@ class ProcessingPlugin(QObject):
 
         processing_menu.addAction(self.resultsAction)
 
-        processing_toolbox_toolbar = self.iface.processingToolboxToolBar()
+        processing_toolbox_toolbar = self.toolboxDock.toolBar()
         # results action should come after the history action
         for idx, _action in enumerate(processing_toolbox_toolbar.actions()):
             if _action.objectName() == "mProcessingHistoryAction":
@@ -481,3 +518,8 @@ class ProcessingPlugin(QObject):
         Starts the test creation process given a processing algorithm run command
         """
         TestTools.createTest(command)
+
+    def openProcessingOptions(self):
+        self.iface.showOptionsDialog(
+            self.iface.mainWindow(), currentPage="processingOptions"
+        )

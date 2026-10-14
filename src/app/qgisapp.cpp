@@ -117,8 +117,6 @@ using namespace Qt::StringLiterals;
 #include "qgsmaplayerfactory.h"
 #include "qgsprocessingwidgetcontext.h"
 #include "qgsprocessingmodelprovider.h"
-#include "processing/qgsprocessingtoolboxdock.h"
-
 #include "qgsbrowserwidget.h"
 #include "annotations/qgsannotationitempropertieswidget.h"
 #include "qgsmaptoolselectannotation.h"
@@ -1218,14 +1216,6 @@ QgisApp::QgisApp(
 
   endProfile();
 
-  // Processing toolbox dock
-  startProfile( tr( "Processing toolbox dock" ) );
-  mProcessingToolboxDockWidget = new QgsProcessingToolboxDockWidget( this );
-  mProcessingToolboxDockWidget->setObjectName( u"ProcessingToolboxDockWidget"_s );
-  mProcessingToolboxDockWidget->setToggleVisibilityAction( mActionShowProcessingToolbox );
-
-  endProfile();
-
   // Statistical Summary dock
   startProfile( tr( "Statistics dock" ) );
   mStatisticalSummaryDockWidget = new QgsStatisticalSummaryDockWidget( this );
@@ -1504,9 +1494,6 @@ QgisApp::QgisApp(
   connect( mBrowserWidget2, &QgsBrowserDockWidget::openFile, this, [this]( const QString &file ) { openFile( file ); } );
   connect( mBrowserWidget2, &QgsBrowserDockWidget::handleDropUriList, this, [this]( const QgsMimeDataUtils::UriList &list ) { handleDropUriList( list ); } );
 
-  addDockWidget( Qt::RightDockWidgetArea, mProcessingToolboxDockWidget );
-  mProcessingToolboxDockWidget->hide();
-
   addDockWidget( Qt::LeftDockWidgetArea, mAdvancedDigitizingDockWidget );
   mAdvancedDigitizingDockWidget->hide();
 
@@ -1698,7 +1685,6 @@ QgisApp::QgisApp(
   mAppProcessingUtils = std::make_unique< QgsAppProcessingUtils >( this );
   mAppProcessingUtils->initProjectModelProvider();
   mAppProcessingUtils->registerActions();
-  mProcessingToolboxDockWidget->initializeActions();
 
   // Create the plugin registry and load plugins
   // load any plugins that were running in the last session
@@ -7057,11 +7043,6 @@ void QgisApp::dwgImport()
 {
   QgsDwgImportDialog d;
   d.exec();
-}
-
-QToolBar *QgisApp::processingToolboxToolBar()
-{
-  return mProcessingToolboxDockWidget->toolBar();
 }
 
 void QgisApp::openTemplate( const QString &fileName )

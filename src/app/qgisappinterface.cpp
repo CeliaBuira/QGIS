@@ -912,10 +912,6 @@ QToolBar *QgisAppInterface::webToolBar()
 {
   return qgis->webToolBar();
 }
-QToolBar *QgisAppInterface::processingToolboxToolBar()
-{
-  return qgis->processingToolboxToolBar();
-}
 QActionGroup *QgisAppInterface::mapToolActionGroup()
 {
   return qgis->mMapToolGroup;
@@ -1310,9 +1306,17 @@ QAction *QgisAppInterface::actionAbout()
 {
   return qgis->actionAbout();
 }
+QAction *QgisAppInterface::actionShowProcessingToolbox()
+{
+  return qgis->actionShowProcessingToolbox();
+}
 QAction *QgisAppInterface::actionEditFeaturesInPlace()
 {
   return qgis->actionEditFeaturesInPlace();
+}
+QAction *QgisAppInterface::actionProcessingHistory()
+{
+  return qgis->actionProcessingHistory();
 }
 
 bool QgisAppInterface::openFeatureForm( QgsVectorLayer *vlayer, QgsFeature &f, bool updateFeatureOnly, bool showModal )
