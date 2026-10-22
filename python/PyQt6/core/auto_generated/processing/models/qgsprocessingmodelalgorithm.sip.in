@@ -194,6 +194,12 @@ algorithms which depend on this specific branch.
 .. seealso:: :py:func:`dependsOnChildAlgorithms`
 %End
 
+    QSet< QString > directlyDependentChildAlgorithms( const QString &childId, const QString &conditionalBranch = QString() ) const;
+%Docstring
+Tmp return a list of the child algorithm IDs directly depending on the
+child TODO remove
+%End
+
     QSet< QString > dependsOnChildAlgorithms( const QString &childId ) const;
 %Docstring
 Returns a list of the child algorithm IDs on which the child algorithm
