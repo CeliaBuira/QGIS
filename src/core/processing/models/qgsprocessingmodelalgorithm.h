@@ -169,6 +169,12 @@ class CORE_EXPORT QgsProcessingModelAlgorithm : public QgsProcessingAlgorithm
     QSet< QString > dependentChildAlgorithms( const QString &childId, const QString &conditionalBranch = QString() ) const;
 
     /**
+     * Tmp return a list of the child algorithm IDs directly depending on the child
+     * TODO remove
+     */
+    QSet< QString > directlyDependentChildAlgorithms( const QString &childId, const QString &conditionalBranch = QString() ) const;
+
+    /**
      * Returns a list of the child algorithm IDs on which the child
      * algorithm with the specified \a childId depends upon.
      * \see dependentChildAlgorithms()
