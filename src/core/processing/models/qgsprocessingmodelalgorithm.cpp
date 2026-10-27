@@ -328,8 +328,6 @@ QVariantMap QgsProcessingModelAlgorithm::processAlgorithm( const QVariantMap &pa
   // executing the model directly through the model designer dialog
   QgsProcessingModelFeedback *modelFeedback = qobject_cast< QgsProcessingModelFeedback * >( feedback );
 
-  QSet< QString > toExecute;
-
   // Generate the DAG of child algorithms to execute
   // TODO replace with the dag from the model as is instead of regenerating it here
   QMap< QString, QSet< QString > > dagToExecute;
@@ -345,7 +343,6 @@ QVariantMap QgsProcessingModelAlgorithm::processAlgorithm( const QVariantMap &pa
       if ( childIt->algorithm() )
       {
         dagToExecute.insert( childIt->childId(), directlyDependentChildAlgorithms( childIt->childId() ) );
-        toExecute.insert( childIt->childId() );
       }
       else
       {
@@ -387,7 +384,9 @@ QVariantMap QgsProcessingModelAlgorithm::processAlgorithm( const QVariantMap &pa
   QElapsedTimer totalTime;
   totalTime.start();
 
-  QgsProcessingMultiStepFeedback childAlgorithmFeedback( toExecute.count(), feedback );
+  const int totalSteps = dagToExecute.count();
+
+  QgsProcessingMultiStepFeedback childAlgorithmFeedback( totalSteps, feedback );
   QgsExpressionContext baseContext = createExpressionContext( parameters, context );
 
   QVariantMap &childInputs = context.modelResult().rawChildInputs();
@@ -473,7 +472,7 @@ QVariantMap QgsProcessingModelAlgorithm::processAlgorithm( const QVariantMap &pa
     }
 
     if ( feedback && !skipGenericLogging )
-      feedback->setProgressText( QObject::tr( "Running %1 [%2/%3]" ).arg( child.description() ).arg( executed.count() + 1 ).arg( toExecute.count() ) );
+      feedback->setProgressText( QObject::tr( "Running %1 [%2/%3]" ).arg( child.description() ).arg( executed.count() + 1 ).arg( totalSteps ) );
 
     QgsProcessingModelChildAlgorithmResult childResult;
 
@@ -746,7 +745,7 @@ QVariantMap QgsProcessingModelAlgorithm::processAlgorithm( const QVariantMap &pa
       {
         // check if any dependent algorithms should be canceled based on the outputs of this algorithm run
         // first find all direct dependencies of this algorithm by looking through all remaining child algorithms
-        for ( const QString &candidateId : std::as_const( toExecute ) )
+        for ( const QString &candidateId : dagToExecute.keys() )
         {
           if ( executed.contains( candidateId ) )
             continue;
@@ -889,16 +888,17 @@ QStringList QgsProcessingModelAlgorithm::asPythonCode( const QgsProcessing::Pyth
 
   const QString algorithmClassName = safeName( name(), true );
 
-  QSet< QString > toExecute;
+  QMap< QString, QSet< QString > > dagToExecute;
   for ( auto childIt = mChildAlgorithms.constBegin(); childIt != mChildAlgorithms.constEnd(); ++childIt )
   {
     if ( childIt->isActive() && childIt->algorithm() )
     {
-      toExecute.insert( childIt->childId() );
+      dagToExecute.insert( childIt->childId(), directlyDependentChildAlgorithms( childIt->childId() ) );
+
       friendlyChildNames.insert( childIt->childId(), uniqueSafeName( childIt->description().isEmpty() ? childIt->childId() : childIt->description(), !childIt->description().isEmpty(), friendlyChildNames ) );
     }
   }
-  const int totalSteps = toExecute.count();
+  const int totalSteps = dagToExecute.count();
 
   QStringList importLines; // not a set - we need regular ordering
   switch ( outputType )
@@ -1033,92 +1033,97 @@ QStringList QgsProcessingModelAlgorithm::asPythonCode( const QgsProcessing::Pyth
   lines << currentIndent + u"outputs = {}"_s;
   lines << QString();
 
-  QSet< QString > executed;
-  bool executedAlg = true;
-  int currentStep = 0;
-  while ( executedAlg && executed.count() < toExecute.count() )
+
+  QMap<QString, int> inComingDegree;
+  // Set of all nodes/child id with no incoming edge
+  QStack<QString> noIncoming;
+  for ( const QString &childId : dagToExecute.keys() )
   {
-    executedAlg = false;
-    const auto constToExecute = toExecute;
-    for ( const QString &childId : constToExecute )
+    for ( const QSet< QString > &dependencies : dagToExecute.values() )
     {
-      if ( executed.contains( childId ) )
-        continue;
-
-      bool canExecute = true;
-      const auto constDependsOnChildAlgorithms = dependsOnChildAlgorithms( childId );
-      for ( const QString &dependency : constDependsOnChildAlgorithms )
+      if ( dependencies.contains( childId ) )
       {
-        if ( !executed.contains( dependency ) )
-        {
-          canExecute = false;
-          break;
-        }
+        inComingDegree[childId]++;
       }
+    }
+    if ( inComingDegree.value( childId ) == 0 )
+    {
+      noIncoming.push( childId );
+    }
+  }
+  QSet< QString > executed;
+  int currentStep = 0;
+  while ( !noIncoming.isEmpty() )
+  {
+    const QString childId = noIncoming.pop();
 
-      if ( !canExecute )
-        continue;
 
-      executedAlg = true;
+    const QgsProcessingModelChildAlgorithm &child = mChildAlgorithms[childId];
 
-      const QgsProcessingModelChildAlgorithm &child = mChildAlgorithms[childId];
-
-      // fill in temporary outputs
-      const QgsProcessingParameterDefinitions childDefs = child.algorithm()->parameterDefinitions();
-      QgsStringMap childParams;
-      for ( const QgsProcessingParameterDefinition *def : childDefs )
+    // fill in temporary outputs
+    const QgsProcessingParameterDefinitions childDefs = child.algorithm()->parameterDefinitions();
+    QgsStringMap childParams;
+    for ( const QgsProcessingParameterDefinition *def : childDefs )
+    {
+      if ( def->isDestination() )
       {
-        if ( def->isDestination() )
-        {
-          const QgsProcessingDestinationParameter *destParam = static_cast< const QgsProcessingDestinationParameter * >( def );
+        const QgsProcessingDestinationParameter *destParam = static_cast< const QgsProcessingDestinationParameter * >( def );
 
-          // is destination linked to one of the final outputs from this model?
-          bool isFinalOutput = false;
-          QMap<QString, QgsProcessingModelOutput> outputs = child.modelOutputs();
-          QMap<QString, QgsProcessingModelOutput>::const_iterator outputIt = outputs.constBegin();
-          for ( ; outputIt != outputs.constEnd(); ++outputIt )
+        // is destination linked to one of the final outputs from this model?
+        bool isFinalOutput = false;
+        QMap<QString, QgsProcessingModelOutput> outputs = child.modelOutputs();
+        QMap<QString, QgsProcessingModelOutput>::const_iterator outputIt = outputs.constBegin();
+        for ( ; outputIt != outputs.constEnd(); ++outputIt )
+        {
+          if ( outputIt->childOutputName() == destParam->name() )
           {
-            if ( outputIt->childOutputName() == destParam->name() )
-            {
-              QString paramName = child.childId() + ':' + outputIt.key();
-              paramName = friendlyOutputNames.value( paramName, paramName );
-              childParams.insert( destParam->name(), u"parameters['%1']"_s.arg( paramName ) );
-              isFinalOutput = true;
-              break;
-            }
+            QString paramName = child.childId() + ':' + outputIt.key();
+            paramName = friendlyOutputNames.value( paramName, paramName );
+            childParams.insert( destParam->name(), u"parameters['%1']"_s.arg( paramName ) );
+            isFinalOutput = true;
+            break;
+          }
+        }
+
+        if ( !isFinalOutput )
+        {
+          // output is temporary
+
+          // check whether it's optional, and if so - is it required?
+          bool required = true;
+          if ( destParam->flags() & Qgis::ProcessingParameterFlag::Optional )
+          {
+            required = childOutputIsRequired( child.childId(), destParam->name() );
           }
 
-          if ( !isFinalOutput )
+          // not optional, or required elsewhere in model
+          if ( required )
           {
-            // output is temporary
-
-            // check whether it's optional, and if so - is it required?
-            bool required = true;
-            if ( destParam->flags() & Qgis::ProcessingParameterFlag::Optional )
-            {
-              required = childOutputIsRequired( child.childId(), destParam->name() );
-            }
-
-            // not optional, or required elsewhere in model
-            if ( required )
-            {
-              childParams.insert( destParam->name(), u"QgsProcessing.TEMPORARY_OUTPUT"_s );
-            }
+            childParams.insert( destParam->name(), u"QgsProcessing.TEMPORARY_OUTPUT"_s );
           }
         }
       }
+    }
 
-      lines << child.asPythonCode( outputType, childParams, currentIndent.size(), indentSize, friendlyChildNames, friendlyOutputNames );
-      currentStep++;
-      if ( currentStep < totalSteps )
+    lines << child.asPythonCode( outputType, childParams, currentIndent.size(), indentSize, friendlyChildNames, friendlyOutputNames );
+    currentStep++;
+    if ( currentStep < totalSteps )
+    {
+      lines << QString();
+      lines << currentIndent + u"feedback.setCurrentStep(%1)"_s.arg( currentStep );
+      lines << currentIndent + u"if feedback.isCanceled():"_s;
+      lines << currentIndent + indent + u"return {}"_s;
+      lines << QString();
+    }
+    executed.insert( childId );
+
+    for ( const QString &nextChildId : dagToExecute.value( childId ) )
+    {
+      inComingDegree[nextChildId] -= 1;
+      if ( inComingDegree[nextChildId] == 0 )
       {
-        lines << QString();
-        lines << currentIndent + u"feedback.setCurrentStep(%1)"_s.arg( currentStep );
-        lines << currentIndent + u"if feedback.isCanceled():"_s;
-        lines << currentIndent + indent + u"return {}"_s;
-        lines << QString();
+        noIncoming.push( nextChildId );
       }
-      executed.insert( childId );
     }
   }
 
@@ -2267,7 +2272,7 @@ QMap<QString, QgsProcessingModelParameter> QgsProcessingModelAlgorithm::paramete
   return mParameterComponents;
 }
 
-void QgsProcessingModelAlgorithm::dependentChildAlgorithmsRecursive( const QString &childId, QSet<QString> &depends, const QString &branch ) const
+void QgsProcessingModelAlgorithm::dependentChildAlgorithmsRecursive( const QString &childId, QSet<QString> &depends, const QString &branch, const bool directlyDependentOnly ) const
 {
   QMap< QString, QgsProcessingModelChildAlgorithm >::const_iterator childIt = mChildAlgorithms.constBegin();
   for ( ; childIt != mChildAlgorithms.constEnd(); ++childIt )
@@ -2290,7 +2295,8 @@ void QgsProcessingModelAlgorithm::dependentChildAlgorithmsRecursive( const QStri
     if ( hasDependency )
     {
       depends.insert( childIt->childId() );
-      dependentChildAlgorithmsRecursive( childIt->childId(), depends, branch );
+      if ( !directlyDependentOnly )
+        dependentChildAlgorithmsRecursive( childIt->childId(), depends, branch );
       continue;
     }
 
@@ -2305,14 +2311,14 @@ void QgsProcessingModelAlgorithm::dependentChildAlgorithmsRecursive( const QStri
         if ( source.source() == Qgis::ProcessingModelChildParameterSource::ChildOutput && source.outputChildId() == childId )
         {
           depends.insert( childIt->childId() );
-          dependentChildAlgorithmsRecursive( childIt->childId(), depends, branch );
+          if ( !directlyDependentOnly )
+            dependentChildAlgorithmsRecursive( childIt->childId(), depends, branch );
           break;
         }
       }
     }
   }
 }
-
 
 QSet<QString> QgsProcessingModelAlgorithm::dependentChildAlgorithms( const QString &childId, const QString &conditionalBranch ) const
 {
@@ -2338,46 +2344,7 @@ QSet< QString > QgsProcessingModelAlgorithm::directlyDependentChildAlgorithms( c
   // unnecessarily recursion though it
   algs.insert( childId );
 
-  QMap< QString, QgsProcessingModelChildAlgorithm >::const_iterator childIt = mChildAlgorithms.constBegin();
-  for ( ; childIt != mChildAlgorithms.constEnd(); ++childIt )
-  {
-    if ( algs.contains( childIt->childId() ) )
-      continue;
-
-    // does alg have a direct dependency on this child?
-    const QList< QgsProcessingModelChildDependency > constDependencies = childIt->dependencies();
-    bool hasDependency = false;
-    for ( const QgsProcessingModelChildDependency &dep : constDependencies )
-    {
-      if ( dep.childId == childId && ( conditionalBranch.isEmpty() || dep.conditionalBranch == conditionalBranch ) )
-      {
-        hasDependency = true;
-        break;
-      }
-    }
-
-    if ( hasDependency )
-    {
-      algs.insert( childIt->childId() );
-      continue;
-    }
-
-    // check whether child requires any outputs from the target alg
-    QMap<QString, QgsProcessingModelChildParameterSources> childParams = childIt->parameterSources();
-    QMap<QString, QgsProcessingModelChildParameterSources>::const_iterator paramIt = childParams.constBegin();
-    for ( ; paramIt != childParams.constEnd(); ++paramIt )
-    {
-      const auto constValue = paramIt.value();
-      for ( const QgsProcessingModelChildParameterSource &source : constValue )
-      {
-        if ( source.source() == Qgis::ProcessingModelChildParameterSource::ChildOutput && source.outputChildId() == childId )
-        {
-          algs.insert( childIt->childId() );
-          break;
-        }
-      }
-    }
-  }
+  dependentChildAlgorithmsRecursive( childId, algs, conditionalBranch, true );
 
   // remove temporary target alg
   algs.remove( childId );

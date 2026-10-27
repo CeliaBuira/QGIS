@@ -169,10 +169,17 @@ class CORE_EXPORT QgsProcessingModelAlgorithm : public QgsProcessingAlgorithm
     QSet< QString > dependentChildAlgorithms( const QString &childId, const QString &conditionalBranch = QString() ) const;
 
     /**
-     * Tmp return a list of the child algorithm IDs directly depending on the child
-     * TODO remove
+     * Returns a list of the child algorithm IDs directly depending on the child
+     * algorithm with the specified \a childId.
+     *
+     * Optionally, a specific conditional branch which is created by the child algorithm
+     * can be specified in order to restrict the returned list to algorithms which depend
+     * on this specific branch.
+     *
+     * \see dependentChildAlgorithms()
+     * \since QGIS 4.6
      */
-    QSet< QString > directlyDependentChildAlgorithms( const QString &childId, const QString &conditionalBranch = QString() ) const;
+    SIP_SKIP QSet< QString > directlyDependentChildAlgorithms( const QString &childId, const QString &conditionalBranch = QString() ) const;
 
     /**
      * Returns a list of the child algorithm IDs on which the child
@@ -663,7 +670,7 @@ class CORE_EXPORT QgsProcessingModelAlgorithm : public QgsProcessingAlgorithm
     QString mOutputGroup;
 
     void dependsOnChildAlgorithmsRecursive( const QString &childId, QSet<QString> &depends ) const;
-    void dependentChildAlgorithmsRecursive( const QString &childId, QSet<QString> &depends, const QString &branch ) const;
+    void dependentChildAlgorithmsRecursive( const QString &childId, QSet<QString> &depends, const QString &branch, const bool directlyDependentOnly = false ) const;
 
     QVariantMap parametersForChildAlgorithm(
       const QgsProcessingModelChildAlgorithm &child,
