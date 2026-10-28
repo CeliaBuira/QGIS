@@ -385,6 +385,7 @@ QgsModelDesignerDialog::QgsModelDesignerDialog( QWidget *parent, Qt::WindowFlags
   } );
 
   updateWindowTitle();
+  repaintModel();
 
   // restore the toolbar and dock widgets positions using Qt settings API
   restoreState( settings.value( u"ModelDesigner/state"_s, QByteArray(), QgsSettings::App ).toByteArray() );

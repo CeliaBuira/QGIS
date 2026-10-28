@@ -84,6 +84,9 @@ void QgsModelGraphicsScene::updateBounds()
     QgsModelComponentGraphicItem *componentItem = dynamic_cast<QgsModelComponentGraphicItem *>( item );
     if ( componentItem )
       bounds = bounds.united( componentItem->sceneBoundingRect() );
+
+    if ( dynamic_cast<QGraphicsSimpleTextItem * >( item ) )
+      bounds = bounds.united( item->sceneBoundingRect() );
   }
 
   if ( bounds.isValid() )
@@ -412,6 +415,15 @@ void QgsModelGraphicsScene::createItems( QgsProcessingModelAlgorithm *model, Qgs
     {
       item->setResults( mLastResult.childResults().value( childId ) );
     }
+  }
+
+  // If the model is empty, display a little help message in plain sight
+  if ( model->childAlgorithms().isEmpty() && model->parameterComponents().isEmpty() && model->groupBoxes().isEmpty() )
+  {
+    // QgsModelComponentGraphicItem *item = createGroupBoxGraphicItem( model, box.clone() );
+    QGraphicsSimpleTextItem *item = new QGraphicsSimpleTextItem( "Add item on the left" );
+    item->setPos( 0, 0 );
+    addItem( item );
   }
 }
 
