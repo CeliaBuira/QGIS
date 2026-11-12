@@ -314,16 +314,16 @@ void QgsModelGraphicsScene::createItems( QgsProcessingModelAlgorithm *model, Qgs
     const QList<QgsProcessingModelChildDependency> dependencies = it.value().dependencies();
     for ( const QgsProcessingModelChildDependency &depend : dependencies )
     {
-      if ( depend.conditionalBranch.isEmpty() || !model->childAlgorithm( depend.childId ).algorithm() )
+      if ( depend.conditionalBranch.isEmpty() || !model->childAlgorithm( depend.fromChildId ).algorithm() )
       {
         addItem(
-          new QgsModelArrowItem( mChildAlgorithmItems.value( depend.childId ), QgsModelArrowItem::Marker::Circle, mChildAlgorithmItems.value( it.value().childId() ), QgsModelArrowItem::Marker::ArrowHead )
+          new QgsModelArrowItem( mChildAlgorithmItems.value( depend.fromChildId ), QgsModelArrowItem::Marker::Circle, mChildAlgorithmItems.value( it.value().childId() ), QgsModelArrowItem::Marker::ArrowHead )
         );
       }
       else
       {
         // find branch link point
-        const QgsProcessingOutputDefinitions outputs = model->childAlgorithm( depend.childId ).algorithm()->outputDefinitions();
+        const QgsProcessingOutputDefinitions outputs = model->childAlgorithm( depend.fromChildId ).algorithm()->outputDefinitions();
         int i = 0;
         bool found = false;
         for ( const QgsProcessingOutputDefinition *output : outputs )
@@ -337,7 +337,7 @@ void QgsModelGraphicsScene::createItems( QgsProcessingModelAlgorithm *model, Qgs
         }
         if ( found )
           addItem(
-            new QgsModelArrowItem( mChildAlgorithmItems.value( depend.childId ), Qt::BottomEdge, i, QgsModelArrowItem::Marker::Circle, mChildAlgorithmItems.value( it.value().childId() ), QgsModelArrowItem::Marker::ArrowHead )
+            new QgsModelArrowItem( mChildAlgorithmItems.value( depend.fromChildId ), Qt::BottomEdge, i, QgsModelArrowItem::Marker::Circle, mChildAlgorithmItems.value( it.value().childId() ), QgsModelArrowItem::Marker::ArrowHead )
           );
       }
     }

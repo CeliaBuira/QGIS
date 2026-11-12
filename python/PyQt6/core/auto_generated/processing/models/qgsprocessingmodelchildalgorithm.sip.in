@@ -206,6 +206,15 @@ algorithm is dependent.
 .. seealso:: :py:func:`setDependencies`
 %End
 
+
+    void setAncestors( const QList< QgsProcessingModelChildDependency > &ancestors );
+%Docstring
+Sets the list of child algorithms from the parent model on which this
+algorithm is dependent.
+
+.. seealso:: :py:func:`dependencies`
+%End
+
     void setDependencies( const QList< QgsProcessingModelChildDependency > &dependencies );
 %Docstring
 Sets the list of child algorithms from the parent model on which this

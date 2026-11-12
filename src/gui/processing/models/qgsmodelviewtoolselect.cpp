@@ -149,6 +149,10 @@ void QgsModelViewToolSelect::modelPressEvent( QgsModelViewMouseEvent *event )
     }
   }
 
+  // Due to the selection tolerance, items can be selected while the mouse is not over them,
+  // so we cannot just forward the mouse press event by calling event->ignore().
+  // We call startMove to simulate a mouse press event on the handles
+  // mMouseHandles->startMove( view()->mapToScene( event->pos() ) );
   event->ignore();
 }
 

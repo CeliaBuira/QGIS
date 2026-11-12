@@ -737,15 +737,20 @@ QVariantMap QgsProcessingModelAlgorithm::processAlgorithm( const QVariantMap &pa
       {
         if ( outputDef->type() == QgsProcessingOutputConditionalBranch::typeName() && !results.value( outputDef->name() ).toBool() )
         {
+          // Would be handy to have all the sucessors
+
           pruneAlgorithmBranchRecursive( childId, outputDef->name() );
         }
       }
 
       if ( childAlg->flags() & Qgis::ProcessingAlgorithmFlag::PruneModelBranchesBasedOnAlgorithmResults )
       {
+        // TODO try to do the same as above but match  output to a child algorithm's output rather than just the branch
+
+
         // check if any dependent algorithms should be canceled based on the outputs of this algorithm run
         // first find all direct dependencies of this algorithm by looking through all remaining child algorithms
-        for ( const QString &candidateId : dagToExecute.keys() )
+        for ( const QString &candidateId : dagToExecute.value( childId ) )
         {
           if ( executed.contains( candidateId ) )
             continue;

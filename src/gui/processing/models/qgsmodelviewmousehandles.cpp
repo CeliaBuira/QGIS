@@ -78,7 +78,6 @@ void QgsModelViewMouseHandles::selectionChanged()
   resetStatusBar();
   updateHandles();
 }
-
 void QgsModelViewMouseHandles::setViewportCursor( Qt::CursorShape cursor )
 {
   //workaround qt bug #3732 by setting cursor for QGraphicsView viewport,

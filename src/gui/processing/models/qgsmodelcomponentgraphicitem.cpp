@@ -1701,6 +1701,8 @@ void QgsModelChildAlgorithmGraphicItem::applyEdit( const QgsProcessingModelChild
   {
     // nothing changed, treat as cancel was pressed
     return;
+
+    //get the scene ?
   }
 
   const QString undoCommandId = u"alg:%1"_s.arg( child->childId() );
@@ -1969,6 +1971,7 @@ void QgsModelOutputGraphicItem::applyEdit( const QString &name, const QString &d
   emit aboutToChange( tr( "Edit %1" ).arg( modelOutput.description() ), undoCommandId );
 
   model()->updateDestinationParameters();
+  // changes dependancy here
   emit requestModelRepaint();
   emit changed();
 }

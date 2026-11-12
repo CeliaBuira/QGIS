@@ -107,6 +107,28 @@ const QgsProcessingAlgorithm *QgsProcessingModelChildAlgorithm::algorithm() cons
   return mAlgorithm.get();
 }
 
+void QgsProcessingModelChildAlgorithm::setAncestors( const QList< QgsProcessingModelChildDependency > &ancestors )
+{
+  mAncestors = ancestors;
+
+  for ( const QgsProcessingModelChildDependency &dependency : mDependencies )
+  {
+    // dependency.setToChildId( mId );
+    // m
+  }
+}
+
+void QgsProcessingModelChildAlgorithm::setDependencies( const QList< QgsProcessingModelChildDependency > &dependencies )
+{
+  mDependencies = dependencies;
+
+  for ( const QgsProcessingModelChildDependency &dependency : mDependencies )
+  {
+    // dependency.setToChildId( mId );
+    // m
+  }
+}
+
 void QgsProcessingModelChildAlgorithm::setModelOutputs( const QMap<QString, QgsProcessingModelOutput> &modelOutputs )
 {
   mModelOutputs = modelOutputs;
