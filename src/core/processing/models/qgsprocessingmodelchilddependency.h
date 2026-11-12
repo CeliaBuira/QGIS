@@ -39,13 +39,16 @@ class CORE_EXPORT QgsProcessingModelChildDependency
     /**
      * Constructor for QgsProcessingModelChildDependency, with the specified \a childId.
      */
-    QgsProcessingModelChildDependency( const QString &childId = QString(), const QString &conditionalBranch = QString() )
-      : childId( childId )
+    QgsProcessingModelChildDependency( const QString &fromChildId = QString(), const QString &conditionalBranch = QString() )
+      : fromChildId( fromChildId )
       , conditionalBranch( conditionalBranch )
     {}
 
     //! Child algorithm ID
-    QString childId;
+    QString fromChildId;
+
+    //! Target child algorithm ID
+    QString toChildId;
 
     //! Conditional branch output name, if applicable.
     QString conditionalBranch;
@@ -57,7 +60,9 @@ class CORE_EXPORT QgsProcessingModelChildDependency
     QVariant toVariant() const
     {
       QVariantMap res;
-      res.insert( u"child_id"_s, childId );
+      res.insert( u"from_child_id"_s, fromChildId );
+      res.insert( u"to_child_id"_s, toChildId );
+      res.insert( u"child_id"_s, fromChildId ); // Keep to remain compatible with older versions of QGIS
       res.insert( u"conditional_branch"_s, conditionalBranch );
       return res;
     }
@@ -68,17 +73,24 @@ class CORE_EXPORT QgsProcessingModelChildDependency
      */
     bool loadVariant( const QVariantMap &map )
     {
-      childId = map.value( u"child_id"_s ).toString();
+      fromChildId = map.value( u"from_child_id"_s ).toString();
+      if ( fromChildId.isEmpty() )
+      {
+        // Try to load from the former "child_id" key if "from_child_id" is not present.
+        fromChildId = map.value( u"child_id"_s ).toString();
+      }
+
+      toChildId = map.value( u"to_child_id"_s ).toString();
       conditionalBranch = map.value( u"conditional_branch"_s ).toString();
       return true;
     }
 
     // TODO c++20 - replace with = default
-    bool operator==( const QgsProcessingModelChildDependency &other ) const { return childId == other.childId && conditionalBranch == other.conditionalBranch; }
+    bool operator==( const QgsProcessingModelChildDependency &other ) const { return fromChildId == other.fromChildId && toChildId == other.toChildId && conditionalBranch == other.conditionalBranch; }
 
     bool operator!=( const QgsProcessingModelChildDependency &other ) const { return !( *this == other ); }
 
-    bool operator<( const QgsProcessingModelChildDependency &other ) const { return childId == other.childId ? conditionalBranch < other.conditionalBranch : childId < other.childId; }
+    // bool operator<( const QgsProcessingModelChildDependency &other ) const { return toChildId == other.toChildId ? conditionalBranch < other.conditionalBranch : toChildId < other.toChildId; }
 };
 
 Q_DECLARE_METATYPE( QgsProcessingModelChildDependency )

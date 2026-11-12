@@ -190,7 +190,7 @@ bool QgsProcessingModelChildAlgorithm::loadVariant( const QVariant &child )
     for ( const QString &dependency : dependencies )
     {
       QgsProcessingModelChildDependency dep;
-      dep.childId = dependency;
+      dep.fromChildId = dependency;
       mDependencies << dep;
     }
   }

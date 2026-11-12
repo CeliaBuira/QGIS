@@ -1985,7 +1985,7 @@ void QgsModelChildDependenciesWidget::showDialog()
     widget->setValueFormatter( [this]( const QVariant &v ) -> QString {
       const QgsProcessingModelChildDependency dep = v.value<QgsProcessingModelChildDependency>();
 
-      const QString description = mModel->childAlgorithm( dep.childId ).description();
+      const QString description = mModel->childAlgorithm( dep.fromChildId ).description();
       if ( dep.conditionalBranch.isEmpty() )
         return description;
       else

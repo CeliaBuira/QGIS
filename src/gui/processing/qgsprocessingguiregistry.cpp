@@ -437,6 +437,7 @@ QgsProcessingModelConfigWidget *QgsProcessingGuiInternalModelConfigWidgetFactory
       std::unique_ptr< QgsProcessingModelChildAlgorithm > updatedAlgorithm = widget->createAlgorithm();
       if ( updatedAlgorithm )
       {
+        // update the model with the new dependancy
         graphicItem->applyEdit( *updatedAlgorithm );
       }
     } );

@@ -219,7 +219,7 @@ void TestQgsProcessingModelGui::testModelerParametersPanelWidgetDependencies()
   std::unique_ptr< QgsProcessingModelChildAlgorithm > recreatedAlg = widget.createAlgorithm();
   QVERIFY( recreatedAlg );
   QCOMPARE( recreatedAlg->dependencies().size(), 1 );
-  QCOMPARE( recreatedAlg->dependencies().at( 0 ).childId, u"parent_alg"_s );
+  QCOMPARE( recreatedAlg->dependencies().at( 0 ).fromChildId, u"parent_alg"_s );
 }
 
 void TestQgsProcessingModelGui::testModelerParametersPanelWidgetSetDependencies()
@@ -260,8 +260,8 @@ void TestQgsProcessingModelGui::testModelerParametersPanelWidgetSetDependencies(
   std::unique_ptr< QgsProcessingModelChildAlgorithm > recreatedAlg = widget.createAlgorithm();
   QVERIFY( recreatedAlg );
   QCOMPARE( recreatedAlg->dependencies().size(), 2 );
-  QCOMPARE( recreatedAlg->dependencies().at( 0 ).childId, u"parent_alg_1"_s );
-  QCOMPARE( recreatedAlg->dependencies().at( 1 ).childId, u"parent_alg_2"_s );
+  QCOMPARE( recreatedAlg->dependencies().at( 0 ).fromChildId, u"parent_alg_1"_s );
+  QCOMPARE( recreatedAlg->dependencies().at( 1 ).fromChildId, u"parent_alg_2"_s );
 
   widget.mDependenciesPanel->setValue( { QgsProcessingModelChildDependency( u"parent_alg_1"_s ) } );
   QCOMPARE( spyChanged.count(), 2 );
@@ -270,7 +270,7 @@ void TestQgsProcessingModelGui::testModelerParametersPanelWidgetSetDependencies(
   recreatedAlg = widget.createAlgorithm();
   QVERIFY( recreatedAlg );
   QCOMPARE( recreatedAlg->dependencies().size(), 1 );
-  QCOMPARE( recreatedAlg->dependencies().at( 0 ).childId, u"parent_alg_1"_s );
+  QCOMPARE( recreatedAlg->dependencies().at( 0 ).fromChildId, u"parent_alg_1"_s );
 }
 
 void TestQgsProcessingModelGui::testModelerParametersPanelWidgetParameterSourcesLists()

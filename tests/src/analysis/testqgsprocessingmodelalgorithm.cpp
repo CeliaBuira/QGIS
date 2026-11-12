@@ -817,7 +817,7 @@ void TestQgsProcessingModelAlgorithm::modelerAlgorithm()
   QVERIFY( alg3.dependsOnChildAlgorithms( u"c8"_s ).contains( u"c7"_s ) );
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c7"_s ).isEmpty() );
   QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).size(), 1 );
-  QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).at( 0 ).childId, u"c7"_s );
+  QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).at( 0 ).fromChildId, u"c7"_s );
 
   // dependency via parameter source
   QgsProcessingModelChildAlgorithm c9;
@@ -840,7 +840,7 @@ void TestQgsProcessingModelAlgorithm::modelerAlgorithm()
 
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c7"_s ).isEmpty() );
   QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).size(), 1 );
-  QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).at( 0 ).childId, u"c7"_s );
+  QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).at( 0 ).fromChildId, u"c7"_s );
   QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c9"_s ).size(), 2 );
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c9"_s ).contains( QgsProcessingModelChildDependency( u"c7"_s ) ) );
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c9"_s ).contains( QgsProcessingModelChildDependency( u"c8"_s ) ) );
@@ -872,7 +872,7 @@ void TestQgsProcessingModelAlgorithm::modelerAlgorithm()
 
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c7"_s ).isEmpty() );
   QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).size(), 1 );
-  QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).at( 0 ).childId, u"c7"_s );
+  QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c8"_s ).at( 0 ).fromChildId, u"c7"_s );
   QCOMPARE( alg3.availableDependenciesForChildAlgorithm( u"c9"_s ).size(), 2 );
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c9"_s ).contains( QgsProcessingModelChildDependency( u"c7"_s ) ) );
   QVERIFY( alg3.availableDependenciesForChildAlgorithm( u"c9"_s ).contains( QgsProcessingModelChildDependency( u"c8"_s ) ) );
@@ -2733,14 +2733,14 @@ void TestQgsProcessingModelAlgorithm::modelDependencies()
 {
   const QgsProcessingModelChildDependency dep( u"childId"_s, u"branch"_s );
 
-  QCOMPARE( dep.childId, u"childId"_s );
+  QCOMPARE( dep.fromChildId, u"childId"_s );
   QCOMPARE( dep.conditionalBranch, u"branch"_s );
 
   const QVariant v = dep.toVariant();
   QgsProcessingModelChildDependency dep2;
   QVERIFY( dep2.loadVariant( v.toMap() ) );
 
-  QCOMPARE( dep2.childId, u"childId"_s );
+  QCOMPARE( dep2.fromChildId, u"childId"_s );
   QCOMPARE( dep2.conditionalBranch, u"branch"_s );
 
   QVERIFY( dep == dep2 );
@@ -2750,10 +2750,10 @@ void TestQgsProcessingModelAlgorithm::modelDependencies()
   QVERIFY( !( dep == dep2 ) );
   QVERIFY( dep != dep2 );
   dep2.conditionalBranch = u"branch"_s;
-  dep2.childId = u"c"_s;
+  dep2.fromChildId = u"c"_s;
   QVERIFY( !( dep == dep2 ) );
   QVERIFY( dep != dep2 );
-  dep2.childId = u"childId"_s;
+  dep2.fromChildId = u"childId"_s;
   QVERIFY( dep == dep2 );
   QVERIFY( !( dep != dep2 ) );
 }

@@ -2285,7 +2285,7 @@ void QgsProcessingModelAlgorithm::dependentChildAlgorithmsRecursive( const QStri
     bool hasDependency = false;
     for ( const QgsProcessingModelChildDependency &dep : constDependencies )
     {
-      if ( dep.childId == childId && ( branch.isEmpty() || dep.conditionalBranch == branch ) )
+      if ( dep.fromChildId == childId && ( branch.isEmpty() || dep.conditionalBranch == branch ) )
       {
         hasDependency = true;
         break;
@@ -2361,10 +2361,10 @@ void QgsProcessingModelAlgorithm::dependsOnChildAlgorithmsRecursive( const QStri
   const QList< QgsProcessingModelChildDependency > constDependencies = alg.dependencies();
   for ( const QgsProcessingModelChildDependency &val : constDependencies )
   {
-    if ( !depends.contains( val.childId ) )
+    if ( !depends.contains( val.fromChildId ) )
     {
-      depends.insert( val.childId );
-      dependsOnChildAlgorithmsRecursive( val.childId, depends );
+      depends.insert( val.fromChildId );
+      dependsOnChildAlgorithmsRecursive( val.fromChildId, depends );
     }
   }
 
@@ -2461,19 +2461,19 @@ QList<QgsProcessingModelChildDependency> QgsProcessingModelAlgorithm::availableD
           if ( def->type() == QgsProcessingOutputConditionalBranch::typeName() )
           {
             hasBranches = true;
-            QgsProcessingModelChildDependency alg;
-            alg.childId = it->childId();
-            alg.conditionalBranch = def->name();
-            res << alg;
+            QgsProcessingModelChildDependency dep;
+            dep.fromChildId = it->childId();
+            dep.conditionalBranch = def->name();
+            res << dep;
           }
         }
       }
 
       if ( !hasBranches )
       {
-        QgsProcessingModelChildDependency alg;
-        alg.childId = it->childId();
-        res << alg;
+        QgsProcessingModelChildDependency dep;
+        dep.fromChildId = it->childId();
+        res << dep;
       }
     }
   }

@@ -24,13 +24,15 @@ Contains details of a child algorithm dependency.
 #include "qgsprocessingmodelchilddependency.h"
 %End
   public:
-    QgsProcessingModelChildDependency( const QString &childId = QString(), const QString &conditionalBranch = QString() );
+    QgsProcessingModelChildDependency( const QString &fromChildId = QString(), const QString &conditionalBranch = QString() );
 %Docstring
 Constructor for QgsProcessingModelChildDependency, with the specified
 ``childId``.
 %End
 
-    QString childId;
+    QString fromChildId;
+
+    QString toChildId;
 
     QString conditionalBranch;
 
@@ -52,7 +54,6 @@ Loads this dependency from a QVariantMap.
 
     bool operator!=( const QgsProcessingModelChildDependency &other ) const;
 
-    bool operator<( const QgsProcessingModelChildDependency &other ) const;
 };
 
 
