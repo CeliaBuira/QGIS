@@ -24,6 +24,7 @@
 #include "qgsmessagelog.h"
 #include "qgsprocessingfeedback.h"
 #include "qgsprocessingmodelfeedback.h"
+#include "qgsprocessingmodelfiletransform.h"
 #include "qgsprocessingmodelgroupbox.h"
 #include "qgsprocessingparametertype.h"
 #include "qgsprocessingregistry.h"
@@ -2033,6 +2034,11 @@ bool QgsProcessingModelAlgorithm::fromFile( const QString &path )
   {
     return false;
   }
+
+  QgsProcessingModelFileTransform modelFileTransform( doc );
+
+  const QgsProjectVersion thisVersion( Qgis::version() );
+  modelFileTransform.updateRevision( thisVersion );
 
   QVariant props = QgsXmlUtils::readVariant( doc.firstChildElement() );
   return loadVariant( props );
